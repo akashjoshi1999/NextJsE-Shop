@@ -8,8 +8,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
 
   try {
-    const res = await fetch(`/api/product/${slug}`, {
-      cache: "no-store",
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
+    const res = await fetch(`${baseUrl}/api/product/${slug}`, {
+      cache: 'no-store',
     })
 
     if (!res.ok) {
