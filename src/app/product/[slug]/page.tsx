@@ -8,7 +8,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
 
   try {
-    const res = await fetch(`http://localhost:3000/api/product/${slug}`, {
+    const res = await fetch(`/api/product/${slug}`, {
       cache: "no-store",
     })
 
