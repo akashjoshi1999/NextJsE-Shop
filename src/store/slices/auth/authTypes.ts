@@ -23,5 +23,7 @@ export interface AuthState {
     loading: boolean
     error: string | null
     isInitialized: boolean,
+    hasFetchedUser: boolean;
+
     // products: [] // Adjust type as needed
 }

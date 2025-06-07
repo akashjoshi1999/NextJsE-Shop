@@ -10,6 +10,7 @@ const initialState: AuthState = {
   loading: false,
   error: null,
   isInitialized: false,
+  hasFetchedUser: false, // 👈 ADDED
 }
 
 const authSlice = createSlice({
@@ -32,6 +33,7 @@ const authSlice = createSlice({
       state.refreshToken = null
       state.isAuthenticated = false
       state.error = null
+      state.hasFetchedUser = false // 👈 RESET FETCH FLAG
 
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token')
@@ -50,16 +52,13 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token')
         const refreshToken = localStorage.getItem('refreshToken')
-    
         if (token && refreshToken) {
           state.token = token
           state.refreshToken = refreshToken
-          // ❌ Do not set isAuthenticated here
         }
       }
       state.isInitialized = true
     },
-    
   },
   extraReducers: (builder) => {
     builder
@@ -91,11 +90,12 @@ const authSlice = createSlice({
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.loading = true
+        state.hasFetchedUser = true // ✅ SET FLAG HERE
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload
-        state.isAuthenticated = true // ✅ Only set true here when user is fully loaded
+        state.isAuthenticated = true
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.loading = false
@@ -105,5 +105,11 @@ const authSlice = createSlice({
   },
 })
 
-export const { setCredentials, logOut, clearError, updateProfile, initializeAuth } = authSlice.actions
+export const {
+  setCredentials,
+  logOut,
+  clearError,
+  updateProfile,
+  initializeAuth,
+} = authSlice.actions
 export default authSlice.reducer

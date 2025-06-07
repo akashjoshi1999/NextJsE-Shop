@@ -21,124 +21,77 @@ export default function Navbar() {
   const { open: openRegisterModal } = useModal('registerModal')
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
-      <div className="flex w-full items-center">
-        <div className="flex w-full md:w-1/3">
+    <nav className="relative z-50 bg-neutral-900/80 backdrop-blur-md border-b border-neutral-800/50 shadow-md sticky top-0">
+      <div className="absolute inset-0 bg-gradient-to-r from-neutral-800/80 via-neutral-900/90 to-neutral-800/80 blur-sm"></div>
+
+      <div className="relative flex items-center justify-between px-4 py-3 lg:px-8">
+        {/* Left Section: Logo + Menu */}
+        <div className="flex w-full items-center md:w-1/3">
           <Link
             href="/"
-            prefetch={true}
-            className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
+            className="flex items-center gap-2 text-white group hover:scale-105 transition-transform duration-300"
           >
-            <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
-              WebU
+            <div className="relative">
+              <LogoSquare />
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-lg"></div>
             </div>
+            <span className="text-lg font-bold uppercase tracking-wider hidden lg:block text-white group-hover:text-indigo-300 transition-colors">
+              WebU
+            </span>
           </Link>
-          {menu.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
-              {menu.map((item) => (
-                <li key={item.title}>
-                  <Link
-                    href={item.path}
-                    prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+
+          <ul className="hidden md:flex gap-6 ml-8">
+            {menu.map((item) => (
+              <li key={item.title}>
+                <Link
+                  href={item.path}
+                  className="text-sm text-neutral-400 hover:text-white font-medium transition-colors duration-200 relative group"
+                >
+                  {item.title}
+                  <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-gradient-to-r from-indigo-500 to-purple-500 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="hidden justify-center md:flex md:w-1/3">
+        {/* Center Section: Search */}
+        <div className="hidden md:flex justify-center md:w-1/3">
           <Suspense fallback={<SearchSkeleton />}>
-            <Search />
+            <div className="relative w-full max-w-md">
+              <Search />
+              <div className="absolute inset-0 rounded-lg pointer-events-none bg-gradient-to-r from-indigo-500/10 to-purple-500/10 blur-md opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+            </div>
           </Suspense>
         </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          {
-            isAuthenticated ?
-              <Profile />
-              : <>
-                <button
-                  onClick={openLoginModal}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={openRegisterModal}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Register
-                </button>
-              </>
-          }
 
+        {/* Right Section: Auth / Profile */}
+        <div className="hidden lg:flex lg:flex-1 justify-end items-center space-x-4">
+          {isAuthenticated ? (
+            <div className="relative">
+              <Profile />
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={openLoginModal}
+                className="px-4 py-2 text-sm font-medium text-neutral-300 hover:text-white border border-neutral-700 rounded-lg transition-all duration-300 hover:bg-neutral-800"
+              >
+                Login
+              </button>
+              <button
+                onClick={openRegisterModal}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-md hover:shadow-xl"
+              >
+                Register
+              </button>
+            </>
+          )}
         </div>
       </div>
-      {/* <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
-        <div className="fixed inset-0 z-50" />
-        <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white-900/10">
-          <div className="flex items-center justify-between">
-            <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Your Company</span>
-              <Image
-                alt="AST"
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                className="h-8 w-auto"
-                width={32}
-                height={32}
-              />
-            </a>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="-m-2.5 rounded-md p-2.5 text-white-700"
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon aria-hidden="true" className="size-6" />
-            </button>
-          </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-white-500/10">
-              <div className="space-y-2 py-6">
-                {menu.map((item) => (
-                  <a
-                    key={item.title}
-                    href={item.path}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-white-900 hover:bg-white-50"
-                  >
-                    {item.title}
-                  </a>
-                ))}
-              </div>
-              <div className="py-6">
-                {isAuthenticated ?
-                  <svg className="w-6 h-6 text-white-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
-                    <path d="M16 0H4a2 2 0 0 0-2 2v1H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM13.929 17H7.071a.5.5 0 0 1-.5-.5 3.935 3.935 0 1 1 7.858 0 .5.5 0 0 1-.5.5Z" />
-                  </svg> :
-                  <>
-                    <button
-                      onClick={openLoginModal}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Login
-                    </button>
-                    <button
-                      onClick={openRegisterModal}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Register
-                    </button>
-                  </>
-                }
-              </div>
-            </div>
-          </div>
-        </DialogPanel>
-      </Dialog> */}
-    </nav >
+
+      {/* Bottom Line Glow */}
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+    </nav>
   )
 }

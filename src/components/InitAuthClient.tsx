@@ -16,6 +16,7 @@ export default function InitAuthClient() {
   const isInitialized = useAppSelector(selectIsInitialized)
   const token = useAppSelector(selectToken)
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const hasFetchedUser = useAppSelector(state => state.auth.hasFetchedUser) // ✅
 
   const hasFetched = useRef(false)
 
@@ -30,12 +31,13 @@ export default function InitAuthClient() {
       isInitialized &&
       token &&
       !isAuthenticated &&
-      !hasFetched.current
+      !hasFetched.current &&
+      !hasFetchedUser
     ) {
       hasFetched.current = true
       dispatch(fetchCurrentUser())
     }
-  }, [dispatch, isInitialized, token, isAuthenticated])
+  }, [dispatch, isInitialized, token, isAuthenticated, hasFetchedUser])
 
   return null
 }
