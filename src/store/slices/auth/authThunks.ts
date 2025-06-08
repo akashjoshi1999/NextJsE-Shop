@@ -1,6 +1,8 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { LoginCredentials, RegisterData, User } from './authTypes'
 import { RootState } from '@/store/index'
+import { signOut } from 'next-auth/react';
+import { logOut } from './authSlice';
 
 export const loginUser = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
@@ -92,6 +94,26 @@ export const fetchCurrentUser = createAsyncThunk<User, void, { state: RootState;
       }
       return rejectWithValue('An unknown error occurred')
 
+    }
+  }
+)
+export const logoutUser = createAsyncThunk<void, void, { rejectValue: string }>(
+  'auth/logoutUser',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      // Clear Redux state and localStorage
+      dispatch(logOut())
+
+      // Trigger NextAuth logout
+      await signOut({
+        redirect: false,
+        callbackUrl: '/login', // optional if you want to redirect
+      })
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message)
+      }
+      return rejectWithValue('Logout failed')
     }
   }
 )

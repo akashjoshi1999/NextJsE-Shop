@@ -1,74 +1,93 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuth } from '../../hooks/useAuth'
-import { useNotification } from '../../hooks/useNotification'
-import { useModal } from '../../hooks/useModal'
-
+import { useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { useNotification } from "../../hooks/useNotification";
+import { useModal } from "../../hooks/useModal";
+import { FcGoogle } from "react-icons/fc"; // Google logo (standard)
+import { FaGithub } from "react-icons/fa"; // GitHub logo (brand-consistent)
+import { signIn } from "next-auth/react";
 interface LoginFormData {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 export default function LoginForm() {
   const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  })
+    email: "",
+    password: "",
+  });
 
-  const { login, loading } = useAuth()
-  const { showSuccess, showError } = useNotification()
-  const { close } = useModal('loginModal')
-  const { open: openRegisterModal } = useModal('registerModal')
+  const { login, loading } = useAuth();
+  const { showSuccess, showError } = useNotification();
+  const { close } = useModal("loginModal");
+  const { open: openRegisterModal } = useModal("registerModal");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const { email, password } = formData
+    const { email, password } = formData;
 
     if (!email || !password) {
-      return showError('Both email and password are required.')
+      return showError("Both email and password are required.");
     }
 
     try {
-      const result = await login({ email, password })
+      const result = await login({ email, password });
 
-      if (result?.type === 'auth/loginUser/fulfilled') {
-        showSuccess('Login successful!')
-        close()
-        setFormData({ email: '', password: '' })
+      if (result?.type === "auth/loginUser/fulfilled") {
+        showSuccess("Login successful!");
+        close();
+        setFormData({ email: "", password: "" });
       } else {
         console.log(result);
 
-        showError('Login failed. Please check your credentials.')
+        showError("Login failed. Please check your credentials.");
       }
     } catch (err) {
-      console.error('Login error:', err)
-      showError('Something went wrong. Please try again.')
+      console.error("Login error:", err);
+      showError("Something went wrong. Please try again.");
     }
-  }
+  };
   const handleRegisterModal = () => {
-    close()
-    openRegisterModal()
-  }
+    close();
+    openRegisterModal();
+  };
+  const handleGoogleSignIn = async () => {
+    close(); // close modal before redirect
+    await signIn("google", { callbackUrl: "/" });
+  };
+
+  const handleGitHubSignIn = async () => {
+    close();
+    await signIn("github", { callbackUrl: "/" });
+  };
+
   return (
     <div className="px-6 py-8 sm:px-8 sm:py-10">
       <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Login to Your Account</h2>
-        <p className="text-sm text-gray-500 mt-1">Enter your credentials below</p>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Login to Your Account
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Enter your credentials below
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email Address
           </label>
           <input
@@ -84,7 +103,10 @@ export default function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
@@ -105,14 +127,34 @@ export default function LoginForm() {
             disabled={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:border-primary-200 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </div>
       </form>
+      <p> OR </p>
+      <div className="mt-4 flex items-center justify-center space-x-4">
+        <button
+          onClick={handleGoogleSignIn}
+          className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-500 font-medium transition border border-gray-300 rounded-md px-4 py-2 bg-white shadow-sm"
+        >
+          <FcGoogle className="w-5 h-5" />
+          <span>Register with Google</span>
+        </button>
+
+        <span className="text-gray-400">|</span>
+
+        <button
+          onClick={handleGitHubSignIn}
+          className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-500 font-medium transition border border-gray-300 rounded-md px-4 py-2 bg-white shadow-sm"
+        >
+          <FaGithub className="w-5 h-5" />
+          <span>Register with GitHub</span>
+        </button>
+      </div>
 
       <div className="mt-6 text-center text-sm text-gray-600">
         <p>
-          Don’t have an account?{' '}
+          Don’t have an account?{" "}
           <button
             type="button"
             onClick={handleRegisterModal}
@@ -123,5 +165,5 @@ export default function LoginForm() {
         </p>
       </div>
     </div>
-  )
+  );
 }

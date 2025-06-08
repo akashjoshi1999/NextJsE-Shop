@@ -3,6 +3,15 @@ export interface User {
     _id?: string
     name: string
     email: string
+    first_name?: string,
+    last_name?: string,
+    phone?: string,
+    bio?: string,
+    location?: string,
+    profileImage?: string // URL or path to the user's profile image
+    image?: string // Optional, used in OAuth flows
+    token?: string // Optional, used in OAuth flows
+    refreshToken?: string // Optional, used in OAuth flows
     // etc.
 }
 
@@ -23,5 +32,7 @@ export interface AuthState {
     loading: boolean
     error: string | null
     isInitialized: boolean,
+    hasFetchedUser: boolean;
+
     // products: [] // Adjust type as needed
 }

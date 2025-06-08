@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { loginUser, registerUser, fetchCurrentUser } from './authThunks'
+import { loginUser, registerUser, fetchCurrentUser, logoutUser } from './authThunks'
 import { AuthState, User } from './authTypes';
 
 const initialState: AuthState = {
@@ -10,6 +10,7 @@ const initialState: AuthState = {
   loading: false,
   error: null,
   isInitialized: false,
+  hasFetchedUser: false, // 👈 ADDED
 }
 
 const authSlice = createSlice({
@@ -26,12 +27,19 @@ const authSlice = createSlice({
       state.refreshToken = refreshToken
       state.isAuthenticated = true
     },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload
+      state.isAuthenticated = true
+      state.token = action.payload.token || null
+  state.refreshToken = action.payload.refreshToken || null
+    },
     logOut: (state) => {
       state.user = null
       state.token = null
       state.refreshToken = null
       state.isAuthenticated = false
       state.error = null
+      state.hasFetchedUser = false // 👈 RESET FETCH FLAG
 
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token')
@@ -50,16 +58,13 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token')
         const refreshToken = localStorage.getItem('refreshToken')
-    
         if (token && refreshToken) {
           state.token = token
           state.refreshToken = refreshToken
-          // ❌ Do not set isAuthenticated here
         }
       }
       state.isInitialized = true
     },
-    
   },
   extraReducers: (builder) => {
     builder
@@ -91,19 +96,38 @@ const authSlice = createSlice({
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.loading = true
+        state.hasFetchedUser = true // ✅ SET FLAG HERE
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload
-        state.isAuthenticated = true // ✅ Only set true here when user is fully loaded
+        state.isAuthenticated = true
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.loading = false
         state.user = null
         state.isAuthenticated = false
       })
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'Logout failed'
+      })
+
   },
 })
 
-export const { setCredentials, logOut, clearError, updateProfile, initializeAuth } = authSlice.actions
+export const {
+  setCredentials,
+  setUser,
+  logOut,
+  clearError,
+  updateProfile,
+  initializeAuth,
+} = authSlice.actions
 export default authSlice.reducer
