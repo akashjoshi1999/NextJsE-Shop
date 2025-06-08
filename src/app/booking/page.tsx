@@ -1,51 +1,75 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
+import type { Session } from "next-auth";
 
 interface Order {
-    productName: string;
-    color: string;
-    category: string;
-    amount: number;
-    paymentStatus: string;
+  productName: string;
+  color: string;
+  category: string;
+  amount: number;
+  paymentStatus: string;
 }
 
 export default function BookingPage() {
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(false)
-    const token = localStorage.getItem('token');
+  const [bookings, setBookings] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    if (!token) {
-        window.location.href = '/';
+  const { data: session, status } = useSession() as {
+    data: (Session & { accessToken?: string }) | null;
+    status: 'authenticated' | 'unauthenticated' | 'loading';
+  };
+  const { token: customToken } = useAuth();
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      let token = customToken;
+
+      if (!token && session?.accessToken) {
+        token = session.accessToken;
+      }
+
+      if (!token && status !== 'loading') {
         toast.error('You must be logged in to view bookings');
+        window.location.href = '/';
         return;
-    }
+      }
 
-    useEffect(() => {
-        const fetchBookings = async () => {
-            setLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/booking`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                cache: 'no-store',
-            });
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/booking`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store',
+        });
 
-            if (res.ok) {
-                const data = await res.json();
-                setBookings(data.orders || []);
-                setLoading(false);
-            } else {
-                console.error('Failed to load bookings');
-                window.location.href = '/';
-            }
-        };
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(data.orders || []);
+        } else {
+          console.error('Failed to load bookings');
+          toast.error('Failed to fetch bookings');
+          window.location.href = '/';
+        }
+      } catch (err) {
+        console.error('Booking fetch error:', err);
+        toast.error('Error fetching bookings');
+        window.location.href = '/';
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        fetchBookings();
-    }, []);
+    fetchBookings();
+  }, [customToken, session, status]);
 
+  if (loading) {
+    return <p className="text-center text-white">Loading...</p>;
+  }
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-neutral-900 to-black flex justify-center p-6">
             <div className="w-full max-w-6xl bg-neutral-900/80 border border-neutral-700 rounded-2xl shadow-2xl">

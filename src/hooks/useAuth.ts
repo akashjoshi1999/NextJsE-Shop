@@ -4,7 +4,7 @@ import { useAppDispatch } from './useAppDispatch';
 import { useAppSelector } from './useAppSelector';
 import { selectAuthError, selectAuthLoading, selectCurrentUser, selectIsAuthenticated, selectToken } from '@/store/slices/auth/authSelectors';
 import { loginUser, logoutUser, registerUser } from '@/store/slices/auth/authThunks';
-import { clearError, logOut } from '@/store/slices/auth/authSlice';
+import { clearError } from '@/store/slices/auth/authSlice';
 import { LoginCredentials, RegisterData } from '@/store/slices/auth/authTypes';
 
 export const useAuth = () => {

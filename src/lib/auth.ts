@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'yoursecret'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'yourrefreshsecret'
 
 export const createToken = (user: User) => {
-  const id = (user as any)._id || user.id // ✅ safer fallback
+  const id = (user as User)._id || user.id // ✅ safer fallback
   return jwt.sign(
     { id, email: user.email },
     JWT_SECRET,
@@ -14,7 +14,7 @@ export const createToken = (user: User) => {
 }
 
 export const createRefreshToken = (user: User) => {
-  const id = (user as any)._id || user.id
+  const id = (user as User)._id || user.id
   return jwt.sign(
     { id, email: user.email },
     JWT_REFRESH_SECRET,

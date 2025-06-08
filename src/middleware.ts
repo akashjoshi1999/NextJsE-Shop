@@ -1,42 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
+import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
+import { getToken } from 'next-auth/jwt';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
+const NEXTAUTH_SECRET = process.env.AUTH_SECRET;
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const { pathname } = req.nextUrl;
 
-  // 🚫 Don't apply middleware to NextAuth routes
-  if (pathname.startsWith('/api/auth') && !pathname.startsWith('/api/auth/booking') && !pathname.startsWith('/api/auth/profile')) {
-    return NextResponse.next()
+  // Skip public or NextAuth routes (except protected booking/profile)
+  if (
+    pathname.startsWith('/api/auth') &&
+    !pathname.startsWith('/api/auth/booking') &&
+    !pathname.startsWith('/api/auth/profile')
+  ) {
+    return NextResponse.next();
   }
 
-  const protectedPaths = ['/api/auth/booking', '/api/auth/profile']
-  if (protectedPaths.some(path => pathname.startsWith(path))) {
-    const authHeader = req.headers.get('authorization')
+  const protectedPaths = ['/api/auth/booking', '/api/auth/profile', '/booking', '/profile'];
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ message: 'Unauthorized: Missing token' }, { status: 401 })
+  if (isProtected) {
+    const authHeader = req.headers.get('authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    // ✅ Try custom JWT first
+    if (bearerToken) {
+      try {
+        await jwtVerify(bearerToken, JWT_SECRET);
+        return NextResponse.next();
+      } catch (err) {
+        console.error('JWT verification failed:', err);
+      }
     }
 
-    const token = authHeader.split(' ')[1]
-    if (!token || token.split('.').length !== 3) {
-      return NextResponse.json({ message: 'Unauthorized: Invalid token format' }, { status: 401 })
+    // ✅ Fallback to OAuth (NextAuth) session token from cookies
+    const token = await getToken({ req, secret: NEXTAUTH_SECRET });
+    if (token?.email) {
+      return NextResponse.next();
     }
 
-    try {
-      await jwtVerify(token, JWT_SECRET)
-      return NextResponse.next()
-    } catch (err) {
-      console.error('JWT verification error:', err)
-      return NextResponse.json({ message: 'Unauthorized: Invalid or expired token' }, { status: 401 })
-    }
+    // ❌ If neither method authenticates
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
-// Match only custom protected routes
 export const config = {
   matcher: ['/api/auth/booking', '/api/auth/profile', '/booking', '/profile'],
-}
+};
