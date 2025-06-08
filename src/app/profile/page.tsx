@@ -12,7 +12,8 @@ const ProfileComponent = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const { user } = useAuth();
+    const { user, token } = useAuth();
+    console.log('token', token);
     // Profile form state
     const [profileData, setProfileData] = useState({
         firstName: user?.first_name || '',
@@ -156,12 +157,10 @@ const ProfileComponent = () => {
 
     };
 
-    const token = localStorage.getItem('token');
-
     useEffect(() => {
         if (!token) {
             toast.error('You must be logged in to view profile');
-            window.location.href = '/';
+            // window.location.href = '/';
         }
     }, []);
 

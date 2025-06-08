@@ -6,42 +6,47 @@ import { createToken, createRefreshToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
     }
 
     await connectToDatabase();
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json({ message: 'Email already in use' }, { status: 409 });
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (user.isOAuth) {
+      return NextResponse.json({
+        message: 'You signed up using Google/GitHub. Please use that method to log in.',
+      }, { status: 403 });
+    }
 
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    const token = createToken(newUser);
-    const refreshToken = createRefreshToken(newUser);
+    if (!isMatch) {
+      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const token = createToken(user);
+    const refreshToken = createRefreshToken(user);
 
     return NextResponse.json({
-      message: 'Registration successful',
+      message: 'Login successful',
       user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
+        id: user._id,
+        name: user.name,
+        email: user.email,
       },
       token,
       refreshToken,
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Login error:', error);
     return NextResponse.json({ message: 'Server error' }, { status: 500 });
   }
 }

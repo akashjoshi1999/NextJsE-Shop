@@ -4,9 +4,14 @@ import { jwtVerify } from 'jose'
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 export async function middleware(req: NextRequest) {
-  const protectedPaths = ['/api/auth/booking', '/api/auth/profile']
   const { pathname } = req.nextUrl
 
+  // 🚫 Don't apply middleware to NextAuth routes
+  if (pathname.startsWith('/api/auth') && !pathname.startsWith('/api/auth/booking') && !pathname.startsWith('/api/auth/profile')) {
+    return NextResponse.next()
+  }
+
+  const protectedPaths = ['/api/auth/booking', '/api/auth/profile']
   if (protectedPaths.some(path => pathname.startsWith(path))) {
     const authHeader = req.headers.get('authorization')
 
@@ -15,15 +20,12 @@ export async function middleware(req: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1]
-
-    // ✅ Check if token is a valid JWT format before verifying
     if (!token || token.split('.').length !== 3) {
       return NextResponse.json({ message: 'Unauthorized: Invalid token format' }, { status: 401 })
     }
 
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET)
-      // Optional: Add payload to request if needed
+      await jwtVerify(token, JWT_SECRET)
       return NextResponse.next()
     } catch (err) {
       console.error('JWT verification error:', err)
@@ -34,6 +36,7 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next()
 }
 
+// Match only custom protected routes
 export const config = {
   matcher: ['/api/auth/booking', '/api/auth/profile', '/booking', '/profile'],
 }

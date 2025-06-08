@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { loginUser, registerUser, fetchCurrentUser } from './authThunks'
+import { loginUser, registerUser, fetchCurrentUser, logoutUser } from './authThunks'
 import { AuthState, User } from './authTypes';
 
 const initialState: AuthState = {
@@ -26,6 +26,12 @@ const authSlice = createSlice({
       state.token = token
       state.refreshToken = refreshToken
       state.isAuthenticated = true
+    },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload
+      state.isAuthenticated = true
+      state.token = action.payload.token || null
+  state.refreshToken = action.payload.refreshToken || null
     },
     logOut: (state) => {
       state.user = null
@@ -102,11 +108,23 @@ const authSlice = createSlice({
         state.user = null
         state.isAuthenticated = false
       })
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'Logout failed'
+      })
+
   },
 })
 
 export const {
   setCredentials,
+  setUser,
   logOut,
   clearError,
   updateProfile,
